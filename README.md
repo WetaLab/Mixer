@@ -18,24 +18,88 @@ npm install @wetalabs/mixer
 ## Usage
 
 ```js
+const { joinVoiceChannel } = require("@discordjs/voice");
 const Mixer = require("@wetalabs/mixer");
+
 const mixer = new Mixer();
 
-await mixer.playSound(guild, voiceChannel, "intro", "./sounds/intro.mp3", 0.8);
+const connection = joinVoiceChannel({
+  channelId: voiceChannel.id,
+  guildId: guild.id,
+  adapterCreator: guild.voiceAdapterCreator,
+});
+
+mixer.attachConnection(connection);
+
+await mixer.playSound("intro", "./sounds/intro.mp3", 0.8);
+
+mixer.resetAll();
+connection.destroy();
 ```
 
+Here’s the updated **API documentation** to match the revised version of your `Mixer` class, where connection handling is done externally:
+
+---
+
 ## API
-`playSound(guild, voiceChannel, soundId, filePth, volume?)`
-Play a sound with the given ID and optional volume.
 
-`stopSound(soundId)`
-Stops and removes a playing sound.
+### `attachConnection(connection)`
 
-`setVolume(soundId, volume)`
-Adjusts the volume of a specific sound.
+Attaches an existing Discord voice connection to the mixer.
+Must be called before playing any sounds.
 
-`resetAll()`
-Stops all sounds and disconnects from the voice channel.
+* **Params:**
+
+  * `connection`: A valid voice connection object from `@discordjs/voice`.
+
+---
+
+### `detachConnection()`
+
+Detaches the current voice connection and stops playback.
+Does not destroy the connection.
+
+---
+
+### `playSound(soundId, filePath, volume?)`
+
+Plays a sound from the given file path with a unique ID and optional volume.
+Requires `attachConnection()` to be called first.
+
+* **Params:**
+
+  * `soundId`: A unique identifier for the sound.
+  * `filePath`: Path to a valid audio file.
+  * `volume?` *(optional)*: A number between `0.0` and `1.0` (default is `1.0`).
+
+---
+
+### `stopSound(soundId)`
+
+Stops and removes a currently playing sound by its ID.
+
+* **Params:**
+
+  * `soundId`: The ID of the sound to stop.
+
+---
+
+### `setVolume(soundId, volume)`
+
+Changes the volume of a currently playing sound.
+
+* **Params:**
+
+  * `soundId`: The ID of the sound.
+  * `volume`: A number between `0.0` and `1.0`.
+
+---
+
+### `resetAll()`
+
+Stops all currently playing sounds and resets the mixer state.
+**Note:** This does *not* disconnect the voice connection — use `detachConnection()` for that.
+
 
 ## License
 

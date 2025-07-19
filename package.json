@@ -1,6 +1,6 @@
 {
   "name": "@wetalabs/mixer",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "A simple audio mixer for Discord voice bots using discord.js/voice.",
   "main": "src/index.js",
   "keywords": ["discord", "voice", "mixer", "audio", "ffmpeg", "discord.js"],

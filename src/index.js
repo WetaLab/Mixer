@@ -1,5 +1,4 @@
 const {
-  joinVoiceChannel,
   createAudioPlayer,
   createAudioResource,
   StreamType,
@@ -18,6 +17,33 @@ class Mixer {
     this.player = null;
     this.mixedStream = null;
     this.sources = new Map(); // key: id, value: { stream, volume }
+  }
+
+  attachConnection(connection) {
+    this.connection = connection;
+
+    if (!this.player) {
+      this.mixedStream = this.createMixerStream();
+
+      const resource = createAudioResource(this.mixedStream, {
+        inputType: StreamType.Raw,
+      });
+
+      this.player = createAudioPlayer();
+      this.player.play(resource);
+      this.connection.subscribe(this.player);
+
+      this.player.on("error", console.error);
+    }
+  }
+
+  detachConnection() {
+    this.connection = null;
+    if (this.player) {
+      this.player.stop();
+      this.player = null;
+    }
+    this.mixedStream = null;
   }
 
   generateSilenceFrame() {
@@ -82,28 +108,9 @@ class Mixer {
     return pcm;
   }
 
-  async playSound(guild, voiceChannel, soundId, filePath, volume = 1.0) {
+  async playSound(soundId, filePath, volume = 1.0) {
     if (!fs.existsSync(filePath)) throw new Error("File not found");
-
-    if (!this.connection) {
-      this.connection = joinVoiceChannel({
-        channelId: voiceChannel.id,
-        guildId: guild.id,
-        adapterCreator: guild.voiceAdapterCreator,
-      });
-
-      this.mixedStream = this.createMixerStream();
-
-      const resource = createAudioResource(this.mixedStream, {
-        inputType: StreamType.Raw,
-      });
-
-      this.player = createAudioPlayer();
-      this.player.play(resource);
-      this.connection.subscribe(this.player);
-
-      this.player.on("error", console.error);
-    }
+    if (!this.connection || !this.player) throw new Error("Mixer is not attached to a connection");
 
     const stream = this.decodeAudio(filePath);
     this.sources.set(soundId, { stream, volume });
@@ -143,9 +150,9 @@ class Mixer {
     this.sources.forEach(({ stream }) => stream.destroy());
     this.sources.clear();
     if (this.player) this.player.stop();
-    if (this.connection) this.connection.destroy();
-    this.connection = null;
-    return `All sounds stopped and connection closed.`;
+    this.player = null;
+    this.mixedStream = null;
+    return `All sounds stopped and mixer reset.`;
   }
 }
 
