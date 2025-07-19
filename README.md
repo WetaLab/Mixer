@@ -18,7 +18,7 @@ npm install @wetalabs/mixer
 ## Usage
 
 ```js
-const Mixer = require("mixer");
+const Mixer = require("@wetalabs/mixer");
 const mixer = new Mixer();
 
 await mixer.playSound(guild, voiceChannel, "intro", "./sounds/intro.mp3", 0.8);
@@ -36,16 +36,6 @@ Adjusts the volume of a specific sound.
 
 `resetAll()`
 Stops all sounds and disconnects from the voice channel.
-
-## How to use in another project
-```bash
-npm install @wetalabs/mixer
-```
-
-```js
-const Mixer = require("mixer");
-const mixer = new Mixer();
-```
 
 ## License
 
