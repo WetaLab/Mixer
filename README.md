@@ -9,6 +9,12 @@ Mixer is a lightweight audio mixer for Discord bots using `@discordjs/voice`. It
 - Per-stream volume control
 - Auto cleanup after playback
 
+## Installation
+
+```bash
+npm install @wetalabs/mixer
+```
+
 ## Usage
 
 ```js
@@ -33,7 +39,7 @@ Stops all sounds and disconnects from the voice channel.
 
 ## How to use in another project
 ```bash
-npm install /path/to/mixer/
+npm install @wetalabs/mixer
 ```
 
 ```js
