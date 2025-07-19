@@ -48,9 +48,9 @@ Here’s the updated **API documentation** to match the revised version of your 
 Attaches an existing Discord voice connection to the mixer.
 Must be called before playing any sounds.
 
-* **Params:**
+- **Params:**
 
-  * `connection`: A valid voice connection object from `@discordjs/voice`.
+  - `connection`: A valid voice connection object from `@discordjs/voice`.
 
 ---
 
@@ -66,11 +66,11 @@ Does not destroy the connection.
 Plays a sound from the given file path with a unique ID and optional volume.
 Requires `attachConnection()` to be called first.
 
-* **Params:**
+- **Params:**
 
-  * `soundId`: A unique identifier for the sound.
-  * `filePath`: Path to a valid audio file.
-  * `volume?` *(optional)*: A number between `0.0` and `1.0` (default is `1.0`).
+  - `soundId`: A unique identifier for the sound.
+  - `filePath`: Path to a valid audio file.
+  - `volume?` _(optional)_: A number between `0.0` and `1.0` (default is `1.0`).
 
 ---
 
@@ -78,9 +78,9 @@ Requires `attachConnection()` to be called first.
 
 Stops and removes a currently playing sound by its ID.
 
-* **Params:**
+- **Params:**
 
-  * `soundId`: The ID of the sound to stop.
+  - `soundId`: The ID of the sound to stop.
 
 ---
 
@@ -88,18 +88,32 @@ Stops and removes a currently playing sound by its ID.
 
 Changes the volume of a currently playing sound.
 
-* **Params:**
+- **Params:**
 
-  * `soundId`: The ID of the sound.
-  * `volume`: A number between `0.0` and `1.0`.
+  - `soundId`: The ID of the sound.
+  - `volume`: A number between `0.0` and `1.0`.
 
 ---
 
 ### `resetAll()`
 
 Stops all currently playing sounds and resets the mixer state.
-**Note:** This does *not* disconnect the voice connection — use `detachConnection()` for that.
+**Note:** This does _not_ disconnect the voice connection — use `detachConnection()` for that.
 
+## Events
+
+Mixer extends `EventEmitter` and emits events you can hook into:
+
+| Event      | Description                              | Callback Args       |
+| ---------- | ---------------------------------------- | ------------------- |
+| `play`     | Emitted when a sound starts playing      | `soundId`           |
+| `end`      | Emitted when a sound finishes playing    | `soundId`           |
+| `stop`     | Emitted when a sound is manually stopped | `soundId`           |
+| `volume`   | Emitted when volume is changed           | `soundId`, `volume` |
+| `error`    | Emitted on playback/streaming error      | `soundId`, `error`  |
+| `reset`    | Emitted when `resetAll()` is called      | —                   |
+| `attached` | Emitted when a connection is attached    | —                   |
+| `detached` | Emitted when the connection is detached  | —                   |
 
 ## License
 

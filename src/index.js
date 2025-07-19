@@ -6,13 +6,15 @@ const {
 const fs = require("fs");
 const prism = require("prism-media");
 const { Readable } = require("stream");
+const EventEmitter = require("events");
 
 const SAMPLE_RATE = 48000;
 const CHANNELS = 2;
 const FRAME_SIZE = 960 * CHANNELS * 2; // 20ms frame @ 48kHz, 16-bit stereo
 
-class Mixer {
+class Mixer extends EventEmitter {
   constructor(verbose = false) {
+    super();
     this.connection = null;
     this.player = null;
     this.mixedStream = null;
@@ -34,7 +36,12 @@ class Mixer {
       this.player.play(resource);
       this.connection.subscribe(this.player);
 
-      this.player.on("error", console.error);
+      this.player.on("error", (err) => {
+        this.emit("error", "player", err);
+        console.error(err);
+      });
+
+      this.emit("attached");
     }
   }
 
@@ -45,6 +52,7 @@ class Mixer {
       this.player = null;
     }
     this.mixedStream = null;
+    this.emit("detached");
   }
 
   generateSilenceFrame() {
@@ -117,13 +125,17 @@ class Mixer {
     const stream = this.decodeAudio(filePath);
     this.sources.set(soundId, { stream, volume });
 
+    this.emit("play", soundId);
+
     stream.on("end", () => {
       this.sources.delete(soundId);
+      this.emit("end", soundId);
       if (this.verbose) console.log(`[END] ${soundId}`);
     });
 
     stream.on("error", (err) => {
       this.sources.delete(soundId);
+      this.emit("error", soundId, err);
       if (this.verbose) console.error(`[ERROR] ${soundId}:`, err);
     });
 
@@ -135,6 +147,7 @@ class Mixer {
       const { stream } = this.sources.get(soundId);
       stream.destroy();
       this.sources.delete(soundId);
+      this.emit("stop", soundId);
       return `Stopped ${soundId}`;
     }
     return `Sound ${soundId} not found`;
@@ -143,17 +156,24 @@ class Mixer {
   setVolume(soundId, volume) {
     if (this.sources.has(soundId)) {
       this.sources.get(soundId).volume = volume;
+      this.emit("volume", soundId, volume);
       return `Volume of ${soundId} set to ${volume}`;
     }
     return `Sound ${soundId} not found`;
   }
 
   resetAll() {
-    this.sources.forEach(({ stream }) => stream.destroy());
+    this.sources.forEach(({ stream }, soundId) => {
+      stream.destroy();
+      this.emit("stop", soundId);
+    });
+
     this.sources.clear();
     if (this.player) this.player.stop();
     this.player = null;
     this.mixedStream = null;
+
+    this.emit("reset");
     return `All sounds stopped and mixer reset.`;
   }
 }
