@@ -12,11 +12,12 @@ const CHANNELS = 2;
 const FRAME_SIZE = 960 * CHANNELS * 2; // 20ms frame @ 48kHz, 16-bit stereo
 
 class Mixer {
-  constructor() {
+  constructor(verbose = false) {
     this.connection = null;
     this.player = null;
     this.mixedStream = null;
     this.sources = new Map(); // key: id, value: { stream, volume }
+    this.verbose = verbose;
   }
 
   attachConnection(connection) {
@@ -110,19 +111,20 @@ class Mixer {
 
   async playSound(soundId, filePath, volume = 1.0) {
     if (!fs.existsSync(filePath)) throw new Error("File not found");
-    if (!this.connection || !this.player) throw new Error("Mixer is not attached to a connection");
+    if (!this.connection || !this.player)
+      throw new Error("Mixer is not attached to a connection");
 
     const stream = this.decodeAudio(filePath);
     this.sources.set(soundId, { stream, volume });
 
     stream.on("end", () => {
       this.sources.delete(soundId);
-      console.log(`[END] ${soundId}`);
+      if (this.verbose) console.log(`[END] ${soundId}`);
     });
 
     stream.on("error", (err) => {
       this.sources.delete(soundId);
-      console.error(`[ERROR] ${soundId}:`, err);
+      if (this.verbose) console.error(`[ERROR] ${soundId}:`, err);
     });
 
     return `Playing ${soundId}`;
