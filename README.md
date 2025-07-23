@@ -37,9 +37,8 @@ mixer.resetAll();
 connection.destroy();
 ```
 
-Here’s the updated **API documentation** to match the revised version of your `Mixer` class, where connection handling is done externally:
 
----
+
 
 ## API
 
