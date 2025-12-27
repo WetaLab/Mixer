@@ -1,6 +1,6 @@
 # Mixer
 
-Mixer is a lightweight audio mixer for Discord bots using `@discordjs/voice`. It allows you to play multiple audio streams simultaneously with individual volume control.
+Mixer is a lightweight audio mixer for Discord bots using `@discordjs/voice`. It allows you to play multiple audio streams simultaneously with individual stream attribute control.
 
 ## Features
 
@@ -97,7 +97,7 @@ Changes the volume of a currently playing sound.
 ### `resetAll()`
 
 Stops all currently playing sounds and resets the mixer state.
-**Note:** This does _not_ disconnect the voice connection — use `detachConnection()` for that.
+**Note:** This does _not_ disconnect the voice connection - use `detachConnection()` for that.
 
 ## Events
 
@@ -110,10 +110,11 @@ Mixer extends `EventEmitter` and emits events you can hook into:
 | `stop`     | Emitted when a sound is manually stopped | `soundId`           |
 | `volume`   | Emitted when volume is changed           | `soundId`, `volume` |
 | `error`    | Emitted on playback/streaming error      | `soundId`, `error`  |
-| `reset`    | Emitted when `resetAll()` is called      | —                   |
-| `attached` | Emitted when a connection is attached    | —                   |
-| `detached` | Emitted when the connection is detached  | —                   |
+| `reset`    | Emitted when `resetAll()` is called      | -                   |
+| `attached` | Emitted when a connection is attached    | -                   |
+| `detached` | Emitted when the connection is detached  | -                   |
 
 ## License
 
 MIT
+
