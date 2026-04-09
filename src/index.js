@@ -114,7 +114,11 @@ class Mixer extends EventEmitter {
 
     const pcm = new Readable().wrap(ffmpeg);
     pcm._readableState.highWaterMark = FRAME_SIZE * 10;
-    return pcm;
+
+    pcm.on("close", () => ffmpeg.destroy());
+    pcm.on("error", () => ffmpeg.destroy());
+    
+    return { pcm, ffmpeg};
   }
 
   async playSound(soundId, filePath, volume = 1.0) {
@@ -122,19 +126,19 @@ class Mixer extends EventEmitter {
     if (!this.connection || !this.player)
       throw new Error("Mixer is not attached to a connection");
 
-    const stream = this.decodeAudio(filePath);
-    this.sources.set(soundId, { stream, volume });
+    const { pcm: stream, ffmpeg } = this.decodeAudio(filePath);
+    this.sources.set(soundId, { stream, ffmpeg, volume });
 
     this.emit("play", soundId);
 
     stream.on("end", () => {
-      this.sources.delete(soundId);
+      this._cleanupSource(soundId);
       this.emit("end", soundId);
       if (this.verbose) console.log(`[END] ${soundId}`);
     });
 
     stream.on("error", (err) => {
-      this.sources.delete(soundId);
+      this._cleanupSource(soundId);
       this.emit("error", soundId, err);
       if (this.verbose) console.error(`[ERROR] ${soundId}:`, err);
     });
@@ -142,11 +146,17 @@ class Mixer extends EventEmitter {
     return `Playing ${soundId}`;
   }
 
+  _cleanupSource(soundId){
+    const source = this.sources.get(soundId);
+    if(!source) return;
+    try { source.stream.destroy(); } catch {};
+    try { source.ffmpeg.desotry(); } catch {}
+    this.sources.delete(soundId)
+  }
+
   stopSound(soundId) {
     if (this.sources.has(soundId)) {
-      const { stream } = this.sources.get(soundId);
-      stream.destroy();
-      this.sources.delete(soundId);
+      this._cleanupSource(soundId);
       this.emit("stop", soundId);
       return `Stopped ${soundId}`;
     }
@@ -163,18 +173,22 @@ class Mixer extends EventEmitter {
   }
 
   resetAll() {
-    this.sources.forEach(({ stream }, soundId) => {
-      stream.destroy();
+    for (const soundId of this.sources.keys()) {
+      this._cleanupSource(soundId);
       this.emit("stop", soundId);
-    });
+    }
 
-    this.sources.clear();
+    this.sources.clear(); // Probably unnecessary
     if (this.player) this.player.stop();
     this.player = null;
     this.mixedStream = null;
 
     this.emit("reset");
     return `All sounds stopped and mixer reset.`;
+  }
+
+  getActiveSourceCount() {
+    return this.sources.size;
   }
 }
 
